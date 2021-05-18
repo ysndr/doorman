@@ -1,14 +1,27 @@
+use std::{borrow::BorrowMut, sync::{Arc, Mutex}, thread, usize};
+
+use discord::{authenticator::DiscordAuth, client};
 use doorman::{manager::Manager, registry::Registry};
 use doorman::interfaces::services::Registry as RegistryTrait;
+use log::{LevelFilter, info, warn};
 use simple::{actuator, authenticator, device::SimpleDevice};
 use clap::Clap;
+use dotenv;
 
 mod simple;
+mod discord;
 
 #[derive(Clap, Debug, Clone)]
 #[clap()]
 struct Args {
 
+    /// Discord UserID
+    #[clap(short, long, env="DISCORD_USER_ID")]
+    user: u64,
+
+    /// Discord Bot Token
+    #[clap(short, long, env="DISCORD_TOKEN")]
+    token: String,
 
     /// How much logging to enable
     /// -v:    warn
@@ -36,6 +49,7 @@ async fn main() -> anyhow::Result<()> {
         3 => LevelFilter::Debug,
         _ => LevelFilter::Trace,
     })
+    // .filter_module("doorman", log::LevelFilter::Debug)
     .init();
 
     let mut registry = Registry::new();
@@ -44,7 +58,15 @@ async fn main() -> anyhow::Result<()> {
 
 
     let detector = simple::detector::Detector::new(&registry);
-    let auth = authenticator::Authenticator {};
+    // let auth = authenticator::Authenticator {};
+
+
+
+
+    let mut client = client::Client::new(args.token, args.user).await;
+    let _ = client.run().await;
+
+    let auth = DiscordAuth::new(&client);
     let act = actuator::Actuator;
 
     let mut manager = Manager::new(detector, auth, act);
