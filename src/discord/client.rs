@@ -2,6 +2,7 @@ use core::time;
 use std::{borrow::BorrowMut, fmt::Display, sync::{Arc}, thread};
 
 use doorman::interfaces::services::AuthenticateResult;
+use log::{debug, info};
 use serenity::{Client as SerenityClient, client::{Context, EventHandler, bridge::gateway::{ShardId, ShardManager}}, framework::StandardFramework, futures::lock::Mutex, http::CacheHttp, model::prelude::Ready};
 use tokio::{sync::mpsc::{self, Receiver}, task::JoinHandle};
 
@@ -13,7 +14,7 @@ struct ReadyHandler(tokio::sync::mpsc::Sender<Context>);
 #[async_trait]
 impl EventHandler for ReadyHandler {
     async fn ready(&self, ctx: Context, _: Ready) {
-        println!("Connected");
+        info!("Connected");
         self.0.send(ctx).await;
     }
 }
@@ -48,7 +49,7 @@ impl Client {
 
         self.ctx = self.ready.recv().await.map(Arc::new);
 
-        println!("ready");
+        debug!("Context Received");
 
         return handle
     }
@@ -81,10 +82,6 @@ impl Client {
 
 
         let ctx = self.ctx.as_ref().unwrap().clone();
-
-        println!("here");
-
-
         let message = self
             .user
             .direct_message(&*ctx, |m| {

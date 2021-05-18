@@ -3,11 +3,9 @@ use crate::interfaces::{
     services::{Actuator, Authenticate, Detector, ServiceError},
 };
 use derive_more::Display;
+use log::{info, log};
 use serenity::futures::TryFutureExt;
 use thiserror::Error;
-use log::{info, log};
-
-
 
 #[derive(Error, Debug)]
 pub enum ManagerError<

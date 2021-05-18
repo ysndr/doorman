@@ -1,5 +1,6 @@
 use super::device::SimpleDevice;
 use doorman::interfaces::services::{self, Authenticate, Registry, ServiceError};
+use log::info;
 use std::io::{self, BufRead};
 use thiserror::Error;
 use async_trait::async_trait;
@@ -32,11 +33,11 @@ impl services::Authenticate for Authenticator {
             stdin.lock().read_line(&mut input).unwrap();
 
             if ["yes", "y"].contains(&input.trim()) {
-                println!("allow");
+                info!("allow");
                 return Ok(services::AuthenticateResult::Allow);
             }
             else if  ["no", "n", ""].contains(&input.trim()) {
-                println!("deny");
+                info!("deny");
 
                 return Ok(services::AuthenticateResult::Deny);
             }
