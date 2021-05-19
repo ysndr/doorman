@@ -22,7 +22,7 @@ impl services::Authenticate for Authenticator {
 
     type AuthenticateError = AuthenticatorError;
 
-    async fn authenticate(&self, device: &Self::Device) -> Result<services::AuthenticateResult, Self::AuthenticateError> {
+    async fn authenticate(&self, device: &Self::Device, _: Option<usize>) -> Result<services::AuthenticateResult, Self::AuthenticateError> {
 
         let stdin = io::stdin();
         println!("Device {:?} device detected.\n open (y)es, (N)o", device);

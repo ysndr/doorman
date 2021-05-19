@@ -55,7 +55,7 @@ where
         info!("Device detected attempting authentication...");
 
         let authentication = self.auth
-            .authenticate(&device)
+            .authenticate(&device, None)
             .await
             .map_err(ManagerError::Authenticate)?;
 

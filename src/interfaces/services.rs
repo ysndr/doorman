@@ -1,7 +1,6 @@
 use std::error::Error;
 
 use async_trait::async_trait;
-use serenity::futures::future::Select;
 
 pub trait ServiceError: Error + std::fmt::Debug + Send + Sync {}
 pub trait Detector {
@@ -28,6 +27,7 @@ pub trait Registry {
 }
 
 
+#[derive(Debug)]
 pub enum AuthenticateResult {
     Allow,
     Deny
@@ -39,7 +39,7 @@ pub trait Authenticate {
     type AuthenticateError: ServiceError;
 
     /// request an authentiation
-    async fn authenticate(&self, device: &Self::Device) -> Result<AuthenticateResult, Self::AuthenticateError>;
+    async fn authenticate(&self, device: &Self::Device, timeout: Option<usize>) -> Result<AuthenticateResult, Self::AuthenticateError>;
 }
 
 
