@@ -43,15 +43,15 @@ pub struct Uninitialized {
 impl ClientState for Uninitialized {}
 
 pub struct Initialized {
-    ctx: Arc<Context>,
+    pub(crate) ctx: Arc<Context>,
     handle: JoinHandle<Result<(), serenity::Error>>,
 }
 impl ClientState for Initialized {}
 
 pub struct Client<S: ClientState> {
     client: Arc<Mutex<serenity::Client>>,
-    user: serenity::model::user::User,
-    state: S,
+    pub(crate) user: serenity::model::user::User,
+    pub(crate) state: S,
 }
 
 impl Client<Uninitialized> {
@@ -98,39 +98,4 @@ impl Client<Uninitialized> {
 }
 
 impl Client<Initialized> {
-    pub async fn authorize<D: Display>(
-        &self,
-        device: D,
-    ) -> Result<AuthenticateResult, serenity::Error> {
-        let ctx = self.state.ctx.clone();
-        let message = self
-            .user
-            .direct_message(&*ctx, |m| {
-                m.content(format!(
-                    "Device close to your door detected: {}\nOpen the door?",
-                    device
-                ));
-                m.reactions(['👍', '🚷'].iter().cloned())
-            })
-            .await
-            .unwrap();
-        // // TODO: Clean this up if possible?
-        // let shards = client.shard_manager.lock().await;
-        // let runners = shards.runners.lock().await;
-
-        // dbg!(&shards.shards_instantiated().await);
-        // let dm_shard = runners.get(&ShardId(0)).unwrap();
-
-        if let Some(reaction) = message.await_reaction(&*ctx).await {
-            let react = &reaction.as_inner_ref().emoji;
-
-            return match react.as_data().as_str() {
-                "👍" => Ok(AuthenticateResult::Allow),
-                _ => Ok(AuthenticateResult::Deny),
-            };
-        } else {
-            let _ = message.reply(&*ctx, "Invalidated.").await?;
-            return Ok(AuthenticateResult::Deny);
-        }
-    }
 }
