@@ -2,9 +2,7 @@ use crate::interfaces::{
     self,
     services::{Actuator, Authenticate, Detector, ServiceError},
 };
-use derive_more::Display;
 use log::{info, log};
-use serenity::futures::TryFutureExt;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
