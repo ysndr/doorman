@@ -3,12 +3,14 @@ use std::error::Error;
 use async_trait::async_trait;
 
 pub trait ServiceError: Error + std::fmt::Debug + Send + Sync {}
+
+#[async_trait]
 pub trait Detector {
     type Device;
     type DetectorError: ServiceError;
 
-    /// Detect a device synchronously
-    fn wait_for_device(&self) -> Result<Self::Device, Self::DetectorError>;
+    /// Detect a device asynchronously
+    async fn wait_for_device(&self) -> Result<Self::Device, Self::DetectorError>;
 }
 
 pub trait Registry {

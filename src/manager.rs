@@ -48,6 +48,7 @@ where
         let device = self
             .detector
             .wait_for_device()
+            .await
             .map_err(ManagerError::Detector)?;
 
         info!("Device detected attempting authentication...");
