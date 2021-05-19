@@ -63,8 +63,8 @@ async fn main() -> anyhow::Result<()> {
 
 
 
-    let mut client = client::Client::new(args.token, args.user).await;
-    let _ = client.run().await;
+    let client = client::Client::new(args.token, args.user).await;
+    let client = client.run().await?;
 
     let auth = DiscordAuth::new(&client);
     let act = actuator::Actuator;

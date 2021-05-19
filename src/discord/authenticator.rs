@@ -6,7 +6,7 @@ use async_trait::async_trait;
 
 use crate::simple::{device::SimpleDevice};
 
-use super::client::Client;
+use super::client::{Client, ClientState, Initialized};
 
 
 #[derive(Debug, Error)]
@@ -18,12 +18,12 @@ pub enum AuthorizationError {
 impl ServiceError for AuthorizationError {}
 
 pub struct DiscordAuth<'a, D> {
-    client: &'a Client,
+    client: &'a Client<Initialized>,
     device: PhantomData<D>,
 }
 
 impl<'a, D> DiscordAuth<'a, D> {
-    pub fn new(client: &'a Client) -> Self {
+    pub fn new(client: &'a Client<Initialized>) -> Self {
 
         let device = PhantomData;
 
