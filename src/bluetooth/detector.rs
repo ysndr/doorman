@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use async_std::task::{block_on};
+use log::{debug, info, warn};
 use tokio::time::{sleep, Duration};
 
 use bluez::client::*;
@@ -55,11 +55,12 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector 
             })
             .nth(0)
             .expect("no usable controllers found");
-        
-        println!("found controller {}", controller);
+
+        info!("Found controller {}", controller);
 
         if !info.current_settings.contains(ControllerSetting::Powered) {
-            println!("powering on bluetooth controller {}", controller);
+            warn!("Bluetooth controller {} powered off", controller);
+            info!("Powering on bluetooth controller {}", controller);
             client.set_powered(controller, true).await?;
         }
 
@@ -76,6 +77,7 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector 
         loop {
             // process() blocks until there is a response to be had
             let response = client.process().await?;
+            debug!("Processing bluetooth event {}", response);
 
             match response.event {
                 Event::DeviceFound {
@@ -87,7 +89,7 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector 
                 } => {
                     let device = SimpleDevice(address.to_string());
                     if self.registry.registered(&device) {
-                        println!("Registered device {} found with RSSI {}", device, rssi);
+                        info!("Registered device {} found with RSSI {}", device, rssi);
 
                         return Ok(device);
                     };
