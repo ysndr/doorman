@@ -13,15 +13,17 @@ anyhow="1.0"
 async-trait="0.1"
 derive_more="0.99"
 log="0.4"
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 env_logger = "0.8"
 clap="3.0.0-beta.2"
 dotenv="0.15"
 cfg-if="1.0"
 futures="0.3"
-
+bluez = { version = "0.3.1", optional = true }
+async-std = {version = "1", features = ["attributes"]}
 
 [features]
 discord = ["discord_auth"]
 discord_auth = [ "discord_base" ]
 discord_base = [ "serenity" ]
+bluetooth = [ "bluez" ]

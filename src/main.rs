@@ -5,6 +5,10 @@ mod discord;
 #[cfg(feature = "discord_base")]
 use discord::{authenticator::DiscordAuth, client};
 
+#[cfg(feature = "bluetooth")]
+mod bluetooth;
+#[cfg(feature = "bluetooth")]
+use bluetooth::{detector::BluetoothDetector};
 
 use doorman::{manager::Manager, registry::Registry};
 use doorman::interfaces::services::Registry as RegistryTrait;
@@ -62,9 +66,15 @@ async fn main() -> anyhow::Result<()> {
     let mut registry = Registry::new();
     registry.register_device(SimpleDevice("OnePlus 5".to_string()))?;
     registry.register_device(SimpleDevice("Yannik's MacBook Pro".to_string()))?;
+    registry.register_device(SimpleDevice("c0:bd:c8:80:01:9e".to_string()));
 
-
-    let detector = simple::detector::Detector::new(&registry);
+    cfg_if::cfg_if! {
+        if #[cfg(feature="bluetooth")] {
+            let detector = BluetoothDetector::new(&registry);
+        } else {
+            let detector = simple::detector::Detector::new(&registry);
+        }
+    }
 
 
     cfg_if::cfg_if! {
