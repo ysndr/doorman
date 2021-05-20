@@ -21,25 +21,25 @@ pub enum ManagerError<
     Actuate(ActError),
 }
 
-pub struct Manager<Detect, Auth, Act, Device>
+pub struct Manager<'a, Detect, Auth, Act, Device>
 where
     Detect: Detector<Device = Device>,
     Auth: Authenticate<Device = Device>,
     Act: Actuator,
 {
-    detector: Detect,
-    auth: Auth,
-    act: Act,
+    detector: &'a Detect,
+    auth: &'a Auth,
+    act: &'a mut Act,
 }
 
-impl<Detect, Auth, Act, Device> Manager<Detect, Auth, Act, Device>
+impl<'a, Detect, Auth, Act, Device> Manager<'a, Detect, Auth, Act, Device>
 where
     Device: std::fmt::Debug,
     Detect: Detector<Device = Device>,
     Auth: Authenticate<Device = Device>,
     Act: Actuator,
 {
-    pub fn new(detector: Detect, auth: Auth, act: Act) -> Self { Self { detector, auth, act } }
+    pub fn new(detector: &'a Detect, auth: &'a Auth, act: &'a mut Act) -> Self { Self { detector, auth, act } }
 
     pub async fn run(&mut self) -> Result<(), ManagerError<Detect::DetectorError, Auth::AuthenticateError, Act::ActuatorError>> {
 

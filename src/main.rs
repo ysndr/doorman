@@ -88,9 +88,9 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    let act = actuator::Actuator;
+    let mut act = actuator::Actuator;
 
-    let mut manager = Manager::new(detector, auth, act);
+    let mut manager = Manager::new(&detector, &auth, &mut act);
 
     manager.run().await?;
 
