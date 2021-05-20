@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 use log::{debug, info, warn};
 use tokio::time::{sleep, Duration};
+use tokio::task;
+use tokio::runtime::Handle;
 
 use bluez::client::*;
 use bluez::interface::controller::*;
@@ -44,23 +46,15 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector
         let controllers = client.get_controller_list().await?;
 
         // find the first controller we can power on
-        let (controller, info) = controllers
-            .into_iter()
-            .filter_map(|controller| {
-                let info =
-                task::block_in_place(move || {
-                    Handle::current().block_on(async move {
-                        client.get_controller_info(controller).await.ok()?;
-                    })
-                })?;
-
-                if info.supported_settings.contains(ControllerSetting::Powered) {
-                    Some((controller, info))
-                } else {
-                    None
-                }
-            })
-            .nth(0)
+        let mut result = None;
+        for controller in controllers.into_iter() {
+            let info = client.get_controller_info(controller).await?;
+            if info.supported_settings.contains(ControllerSetting::Powered) {
+                result = Some((controller, info));
+                break;
+            }
+        }
+        let (controller, info) = result
             .ok_or(DetectorError::NoDevice)?;
 
         info!("Found controller {}", controller);
@@ -84,7 +78,7 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector
         loop {
             // process() blocks until there is a response to be had
             let response = client.process().await?;
-            debug!("Processing bluetooth event {}", response);
+            debug!("Processing bluetooth event {:?}", response.event);
 
             match response.event {
                 Event::DeviceFound {
