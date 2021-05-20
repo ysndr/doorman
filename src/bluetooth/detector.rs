@@ -1,8 +1,6 @@
 use async_trait::async_trait;
 use log::{debug, info, warn};
 use tokio::time::{sleep, Duration};
-use tokio::task;
-use tokio::runtime::Handle;
 
 use bluez::client::*;
 use bluez::interface::controller::*;
@@ -97,7 +95,7 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector
                 }
                 Event::Discovering {
                     discovering,
-                    address_type,
+                    address_type: _,
                 } => {
                     // println!("discovering: {} {:?}", discovering, address_type);
                     // if discovery ended, turn it back on
