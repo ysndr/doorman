@@ -27,11 +27,15 @@ pub struct BluetoothDetector<'a, Reg: Registry<Device = SimpleDevice> + Send + S
 }
 
 impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> BluetoothDetector<'a, Reg> {
-    pub fn new(registry: &'a Reg) -> Self { Self { registry } }
+    pub fn new(registry: &'a Reg) -> Self {
+        Self { registry }
+    }
 }
 
 #[async_trait]
-impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector for BluetoothDetector<'a, Reg> {
+impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector
+    for BluetoothDetector<'a, Reg>
+{
     type Device = SimpleDevice;
     type DetectorError = DetectorError;
 
