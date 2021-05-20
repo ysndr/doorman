@@ -13,16 +13,14 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum DetectorError {
-    #[error("Error in bluez")]
-    EOLError
+    #[error("Error in bluez: {0}")]
+    Bluez(#[from] BluezError),
+
+    #[error("Couldn't find supported Bluetooth device")]
+    NoDevice,
 }
 
 impl ServiceError for DetectorError {}
-impl From<BluezError> for DetectorError {
-    fn from(err: BluezError) -> Self {
-        DetectorError::EOLError
-    }
-}
 
 pub struct BluetoothDetector<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> {
     registry: &'a Reg,
@@ -54,7 +52,7 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector 
                 }
             })
             .nth(0)
-            .expect("no usable controllers found");
+            .ok_or(DetectorError::NoDevice)?;
 
         info!("Found controller {}", controller);
 
