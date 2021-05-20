@@ -43,7 +43,12 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector 
         let (controller, info) = controllers
             .into_iter()
             .filter_map(|controller| {
-                let info = block_on(client.get_controller_info(controller)).ok()?;
+                let info =
+                task::block_in_place(move || {
+                    Handle::current().block_on(async move {
+                        client.get_controller_info(controller).await.ok()?;
+                    })
+                })?;
 
                 if info.supported_settings.contains(ControllerSetting::Powered) {
                     Some((controller, info))
