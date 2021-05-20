@@ -1,20 +1,16 @@
-use core::time;
-use std::{borrow::BorrowMut, fmt::Display, marker::PhantomData, sync::Arc, thread};
+use std::sync::Arc;
 
 use async_trait::async_trait;
-use doorman::interfaces::services::AuthenticateResult;
 use log::{debug, error, info};
 use serenity::{
     client::{
-        bridge::gateway::{ShardId, ShardManager},
         Context, EventHandler,
     },
     framework::StandardFramework,
-    futures::lock::Mutex,
-    http::CacheHttp,
     model::prelude::Ready,
     Client as SerenityClient,
 };
+use futures::lock::Mutex;
 use thiserror::Error;
 use tokio::{
     sync::mpsc::{self, Receiver},

@@ -1,15 +1,13 @@
 use async_trait::async_trait;
 use doorman::interfaces::services::{
-    self, Authenticate, AuthenticateResult, Registry, ServiceError,
+    self, AuthenticateResult, ServiceError,
 };
 use serenity::Error as SerenityError;
-use core::time;
-use std::{fmt::Display, io::{self, BufRead}, marker::PhantomData, time::Duration};
+use std::{fmt::Display, marker::PhantomData, time::Duration};
 use thiserror::Error;
 
-use crate::simple::device::SimpleDevice;
 
-use super::client::{Client, ClientState, Initialized};
+use super::client::{Client, Initialized};
 
 #[derive(Debug, Error)]
 pub enum AuthorizationError {
