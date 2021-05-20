@@ -66,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
     let mut registry = Registry::new();
     registry.register_device(SimpleDevice("OnePlus 5".to_string()))?;
     registry.register_device(SimpleDevice("Yannik's MacBook Pro".to_string()))?;
-    registry.register_device(SimpleDevice("c0:bd:c8:80:01:9e".to_string()));
+    registry.register_device(SimpleDevice("c0:bd:c8:80:01:9e".to_string()))?;
 
     cfg_if::cfg_if! {
         if #[cfg(feature="bluetooth")] {
