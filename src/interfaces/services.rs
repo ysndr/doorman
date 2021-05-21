@@ -10,22 +10,31 @@ pub trait Detector {
     type DetectorError: ServiceError;
 
     /// Detect a device asynchronously
-    async fn wait_for_device(&self) -> Result<Self::Device, Self::DetectorError>;
+    async fn wait_for_device(&self) -> Result<&Self::Device, Self::DetectorError>;
 }
 
 pub trait Registry {
-    type Device: Eq;
+    type Ident;
+    type Device;
     type RegistryError: ServiceError;
 
-     /// Register a new device
-     fn register_device(&mut self, device: Self::Device) -> Result<(), Self::RegistryError>;
+    /// Register a new device
+    fn register_device_with(&mut self, ident: Self::Ident, device: Self::Device) -> Result<(), Self::RegistryError>;
 
-    /// Unregisters an existing device
+    /// Register a new device deriving the identifier from the divice
+    /// Prefer using this method of there are no naming conflicts
+    fn register_device<D: Into<Self::Ident> + Into<Self::Device> + Clone>(&mut self, device: D) -> Result<(), Self::RegistryError> {
+        self.register_device_with(device.clone().into(), device.into())
+    }
+
+
+    /// Unregisters an existing device with a given ident
     /// Returns an error if the device is unknown
-    fn unregister_device(&mut self, device: &Self::Device) -> Result<(), Self::RegistryError>;
+    fn unregister_device(&mut self, ident: &Self::Ident) -> Result<(), Self::RegistryError>;
 
     /// checks whether devices is registered
-    fn registered(&self, device: &Self::Device) -> bool;
+    /// returns the device or None
+    fn check(&self, ident: &Self::Ident) -> Option<&Self::Device>;
 }
 
 

@@ -7,9 +7,10 @@ use bluez::interface::controller::*;
 use bluez::interface::event::Event;
 use bluez::Error as BluezError;
 
-use crate::simple::device::SimpleDevice;
 use doorman::interfaces::services::{self, Registry, ServiceError};
 use thiserror::Error;
+
+use super::device::BluetoothDevice;
 
 #[derive(Debug, Error)]
 pub enum DetectorError {
@@ -22,24 +23,24 @@ pub enum DetectorError {
 
 impl ServiceError for DetectorError {}
 
-pub struct BluetoothDetector<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> {
+pub struct BluetoothDetector<'a, Reg: Registry + Send + Sync> {
     registry: &'a Reg,
 }
 
-impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> BluetoothDetector<'a, Reg> {
+impl<'a, Reg: Registry + Send + Sync> BluetoothDetector<'a, Reg> {
     pub fn new(registry: &'a Reg) -> Self {
         Self { registry }
     }
 }
 
 #[async_trait]
-impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector
+impl<'a, Reg: Registry<Ident=String, Device = BluetoothDevice> + Send + Sync> services::Detector
     for BluetoothDetector<'a, Reg>
 {
-    type Device = SimpleDevice;
+    type Device = BluetoothDevice;
     type DetectorError = DetectorError;
 
-    async fn wait_for_device(&self) -> Result<Self::Device, DetectorError> {
+    async fn wait_for_device(&self) -> Result<&Self::Device, DetectorError> {
         let mut client = BlueZClient::new().unwrap();
         let controllers = client.get_controller_list().await?;
 
@@ -86,11 +87,9 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector
                     rssi,
                     ..
                 } => {
-                    let device = SimpleDevice(address.to_string());
-                    if self.registry.registered(&device) {
+                    if let Some(device) = self.registry.check(&address.to_string()) {
                         info!("Registered device {} found with RSSI {}", device, rssi);
-
-                        return Ok(device);
+                        return Ok(&device);
                     };
                 }
                 Event::Discovering {

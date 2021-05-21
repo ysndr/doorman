@@ -1,32 +1,46 @@
-use super::device::SimpleDevice;
-use doorman::interfaces::services::{self, Authenticate, Registry, ServiceError};
-use log::info;
-use std::io::{self, BufRead};
-use thiserror::Error;
 use async_trait::async_trait;
+use derive_more::Constructor;
+use doorman::interfaces::services::{self, ServiceError};
+use log::info;
+use std::{
+    fmt::Display,
+    io::{self, BufRead},
+    marker::PhantomData,
+};
+use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum AuthenticatorError {
     #[error("EOL without device found")]
-    EOLError
+    EOLError,
 }
 
 impl ServiceError for AuthenticatorError {}
 
-pub struct Authenticator {
+pub struct Authenticator<D: Display> {
+    marker: PhantomData<D>,
+}
 
+impl<D: Display> Authenticator<D> {
+    pub fn new() -> Self {
+        Self {
+            marker: PhantomData,
+        }
+    }
 }
 
 #[async_trait]
-impl services::Authenticate for Authenticator {
-    type Device = SimpleDevice;
+impl<D: Display + std::marker::Sync> services::Authenticate for Authenticator<D> {
+    type Device = D;
 
     type AuthenticateError = AuthenticatorError;
 
-    async fn authenticate(&self, device: &Self::Device, _: Option<usize>) -> Result<services::AuthenticateResult, Self::AuthenticateError> {
-
+    async fn authenticate(
+        &self,
+        device: &Self::Device,
+        _: Option<usize>,
+    ) -> Result<services::AuthenticateResult, Self::AuthenticateError> {
         let stdin = io::stdin();
-        println!("Device {:?} device detected.\n open (y)es, (N)o", device);
-
+        println!("Device {} device detected.\n open (y)es, (N)o", device);
 
         let mut input = String::new();
         while input.is_empty() {
@@ -35,8 +49,7 @@ impl services::Authenticate for Authenticator {
             if ["yes", "y"].contains(&input.trim()) {
                 info!("allow");
                 return Ok(services::AuthenticateResult::Allow);
-            }
-            else if  ["no", "n", ""].contains(&input.trim()) {
+            } else if ["no", "n", ""].contains(&input.trim()) {
                 info!("deny");
 
                 return Ok(services::AuthenticateResult::Deny);
@@ -45,6 +58,5 @@ impl services::Authenticate for Authenticator {
         }
 
         Err(AuthenticatorError::EOLError)
-
     }
 }

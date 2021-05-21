@@ -20,16 +20,16 @@ impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> Detector<'a, Reg> {
 }
 
 #[async_trait]
-impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> services::Detector for Detector<'a, Reg> {
+impl<'a, Reg: Registry<Device = SimpleDevice, Ident=SimpleDevice> + Send + Sync> services::Detector for Detector<'a, Reg> {
     type Device = SimpleDevice;
     type DetectorError = DetectorError;
 
-    async fn wait_for_device(&self) -> Result<Self::Device, Self::DetectorError> {
+    async fn wait_for_device(&self) -> Result<&Self::Device, Self::DetectorError> {
         let stdin = io::stdin();
         for line in stdin.lock().lines() {
             let device = SimpleDevice(line.unwrap());
 
-            if self.registry.registered(&device) {
+            if let Some(device) = self.registry.check(&device) {
                 return Ok(device);
             };
 
