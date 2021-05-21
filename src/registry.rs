@@ -1,11 +1,11 @@
-use std::{collections::HashSet, hash::Hash};
+use std::{collections::{HashMap, HashSet}, hash::Hash};
 
 use crate::interfaces::services::{self, ServiceError};
 use thiserror::Error;
 
 #[derive(Debug, Default)]
-pub struct Registry<Device: Hash + Eq> {
-    devices: HashSet<Device>,
+pub struct Registry<Ident: Hash + Eq, Device> {
+    devices: HashMap<Ident, Device>,
 }
 
 
@@ -16,32 +16,33 @@ pub enum RegistryError {
 }
 impl ServiceError for RegistryError {}
 
-impl <Device: Hash + Eq> services::Registry for Registry<Device> {
+impl <Ident: Hash + Eq, Device> services::Registry for Registry<Ident, Device> {
+    type Ident = Ident;
     type Device = Device;
     type RegistryError = RegistryError;
 
-    fn register_device(&mut self, device: Self::Device) -> Result<(), Self::RegistryError> {
-        self.devices.insert(device);
+    fn register_device_with(&mut self, ident: Self::Ident, device: Self::Device) -> Result<(), Self::RegistryError> {
+        self.devices.insert(ident, device);
         Ok(())
     }
 
-    fn unregister_device(&mut self, device: &Self::Device) -> Result<(), Self::RegistryError> {
-        if !self.devices.remove(&device) {
+    fn unregister_device(&mut self, ident: &Self::Ident) -> Result<(), Self::RegistryError> {
+        if self.devices.remove(&ident).is_none() {
             return Err(RegistryError::NotFoundError)
         }
         Ok(())
     }
 
-    fn registered(&self, device: &Self::Device) -> bool {
-        self.devices.contains(device)
+    fn check(&self, ident: &Self::Ident) -> Option<&Self::Device> {
+        self.devices.get(ident)
     }
 }
 
 
-impl<Device: Hash + Eq> Registry<Device> {
+impl<Ident: Hash + Eq, D> Registry<Ident, D> {
     pub fn new() -> Self {
         Registry {
-            devices: HashSet::new()
+            devices: HashMap::new()
         }
     }
 }

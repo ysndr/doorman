@@ -23,3 +23,8 @@ By default authentication is implemented through cli input. Teh project also imp
 
 Discord integration can be enabled by compiling the binary with `--features discord`
 To work with discord on vscode add `"rust-analyzer.cargo.features" : ["discord"]` to the projects `.vscode/settings.json`.
+
+### bluetooth
+
+Bluetooth integration can be enabled by compiling the binary with `--features bluetooth`
+For the program to be able to start device discovery, the binary should be run with sudo privileges.

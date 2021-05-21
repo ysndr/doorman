@@ -5,13 +5,18 @@ mod discord;
 #[cfg(feature = "discord_base")]
 use discord::{authenticator::DiscordAuth, client};
 
+#[cfg(feature = "bluetooth")]
+mod bluetooth;
+#[cfg(feature = "bluetooth")]
+use bluetooth::{detector::BluetoothDetector, device::BluetoothDevice};
 
 use doorman::{manager::Manager, registry::Registry};
 use doorman::interfaces::services::Registry as RegistryTrait;
 use log::{LevelFilter, info, warn};
 use simple::{actuator, authenticator, device::SimpleDevice};
 use clap::Clap;
-use dotenv;
+
+
 
 mod simple;
 
@@ -60,11 +65,18 @@ async fn main() -> anyhow::Result<()> {
     .init();
 
     let mut registry = Registry::new();
-    registry.register_device(SimpleDevice("OnePlus 5".to_string()))?;
-    registry.register_device(SimpleDevice("Yannik's MacBook Pro".to_string()))?;
 
-
-    let detector = simple::detector::Detector::new(&registry);
+    cfg_if::cfg_if! {
+        if #[cfg(feature="bluetooth")] {
+            registry.register_device(BluetoothDevice::new("Gamal Samsung".to_string(), "c0:bd:c8:80:01:9e".to_string(), 0 ))?;
+            registry.register_device(BluetoothDevice::new("OnePlus 5".to_string(), "94:65:2d:7d:25:67".to_string(), 0 ))?;
+            let detector = BluetoothDetector::new(&registry).await?;
+        } else {
+            registry.register_device(SimpleDevice("Yannik's MacBook Pro".to_string()))?;
+            registry.register_device(SimpleDevice("Yannik's MacBook Pro".to_string()))?;
+            let detector = simple::detector::Detector::new(&registry);
+        }
+    }
 
 
     cfg_if::cfg_if! {
@@ -74,13 +86,13 @@ async fn main() -> anyhow::Result<()> {
             let auth = DiscordAuth::new(&client);
         }
         else {
-            let auth = authenticator::Authenticator {};
+            let auth = authenticator::Authenticator::new();
         }
     }
 
-    let act = actuator::Actuator;
+    let mut act = actuator::Actuator;
 
-    let mut manager = Manager::new(detector, auth, act);
+    let mut manager = Manager::new(&detector, &auth, &mut act);
 
     manager.run().await?;
 
