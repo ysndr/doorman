@@ -70,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
         if #[cfg(feature="bluetooth")] {
             registry.register_device(BluetoothDevice::new("Gamal Samsung".to_string(), "c0:bd:c8:80:01:9e".to_string(), 0 ))?;
             registry.register_device(BluetoothDevice::new("OnePlus 5".to_string(), "94:65:2d:7d:25:67".to_string(), 0 ))?;
-            let detector = BluetoothDetector::new(&registry);
+            let detector = BluetoothDetector::new(&registry).await?;
         } else {
             registry.register_device(SimpleDevice("Yannik's MacBook Pro".to_string()))?;
             registry.register_device(SimpleDevice("Yannik's MacBook Pro".to_string()))?;

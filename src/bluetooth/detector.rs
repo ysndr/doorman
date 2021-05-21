@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
+use futures::lock::Mutex;
 use log::{debug, info, warn};
 use tokio::time::{sleep, Duration};
 
@@ -25,22 +28,12 @@ impl ServiceError for DetectorError {}
 
 pub struct BluetoothDetector<'a, Reg: Registry + Send + Sync> {
     registry: &'a Reg,
+    client: Mutex<BlueZClient<'a>>,
+    controller: Controller,
 }
 
 impl<'a, Reg: Registry + Send + Sync> BluetoothDetector<'a, Reg> {
-    pub fn new(registry: &'a Reg) -> Self {
-        Self { registry }
-    }
-}
-
-#[async_trait]
-impl<'a, Reg: Registry<Ident=String, Device = BluetoothDevice> + Send + Sync> services::Detector
-    for BluetoothDetector<'a, Reg>
-{
-    type Device = BluetoothDevice;
-    type DetectorError = DetectorError;
-
-    async fn wait_for_device(&self) -> Result<&Self::Device, DetectorError> {
+    pub async fn new(registry: &'a Reg) -> Result<BluetoothDetector<'a, Reg>, DetectorError> {
         let mut client = BlueZClient::new().unwrap();
         let controllers = client.get_controller_list().await?;
 
@@ -53,8 +46,7 @@ impl<'a, Reg: Registry<Ident=String, Device = BluetoothDevice> + Send + Sync> se
                 break;
             }
         }
-        let (controller, info) = result
-            .ok_or(DetectorError::NoDevice)?;
+        let (controller, info) = result.ok_or(DetectorError::NoDevice)?;
 
         info!("Found controller {}", controller);
 
@@ -64,11 +56,29 @@ impl<'a, Reg: Registry<Ident=String, Device = BluetoothDevice> + Send + Sync> se
             client.set_powered(controller, true).await?;
         }
 
+        Ok(Self {
+            registry,
+            client: Mutex::new(client),
+            controller,
+        })
+    }
+}
+
+#[async_trait]
+impl<'a, Reg: Registry<Ident = String, Device = BluetoothDevice> + Send + Sync> services::Detector
+    for BluetoothDetector<'a, Reg>
+{
+    type Device = BluetoothDevice;
+    type DetectorError = DetectorError;
+
+    async fn wait_for_device(&self) -> Result<&Self::Device, DetectorError> {
+        let mut client = self.client.lock().await;
+
         // scan for some devices
         // to do this we'll need to listen for the Device Found event
         client
             .start_discovery(
-                controller,
+                self.controller,
                 AddressTypeFlag::BREDR | AddressTypeFlag::LEPublic | AddressTypeFlag::LERandom,
             )
             .await?;
@@ -78,7 +88,6 @@ impl<'a, Reg: Registry<Ident=String, Device = BluetoothDevice> + Send + Sync> se
             // process() blocks until there is a response to be had
             let response = client.process().await?;
             debug!("Processing bluetooth event {:?}", response.event);
-
             match response.event {
                 Event::DeviceFound {
                     address,
@@ -101,7 +110,7 @@ impl<'a, Reg: Registry<Ident=String, Device = BluetoothDevice> + Send + Sync> se
                     if !discovering {
                         client
                             .start_discovery(
-                                controller,
+                                self.controller,
                                 AddressTypeFlag::BREDR
                                     | AddressTypeFlag::LEPublic
                                     | AddressTypeFlag::LERandom,
