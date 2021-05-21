@@ -1,8 +1,4 @@
-use std::{
-    borrow::BorrowMut,
-    sync::{Arc, Mutex},
-    thread, usize,
-};
+
 
 #[cfg(feature = "discord_base")]
 mod discord;
@@ -17,7 +13,7 @@ use bluetooth::{detector::BluetoothDetector, device::BluetoothDevice};
 use clap::Clap;
 use doorman::interfaces::services::Registry as RegistryTrait;
 use doorman::{manager::Manager, registry::Registry};
-use log::{info, warn, LevelFilter};
+use log::{LevelFilter};
 use simple::{actuator, authenticator, device::SimpleDevice};
 
 mod simple;

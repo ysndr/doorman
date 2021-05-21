@@ -2,7 +2,7 @@ use crate::interfaces::{
     self,
     services::{Actuator, Authenticate, Detector, ServiceError},
 };
-use log::{info, log};
+use log::{info};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
