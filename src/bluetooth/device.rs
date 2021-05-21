@@ -1,4 +1,4 @@
-use derive_more::{Display, Constructor};
+use derive_more::{Constructor, Display};
 
 pub type Address = String;
 
@@ -9,8 +9,6 @@ pub struct BluetoothDevice {
     address: Address,
     rssi_reference: u64,
 }
-
-
 
 impl Into<Address> for BluetoothDevice {
     fn into(self) -> Address {

@@ -1,4 +1,8 @@
-use std::{borrow::BorrowMut, sync::{Arc, Mutex}, thread, usize};
+use std::{
+    borrow::BorrowMut,
+    sync::{Arc, Mutex},
+    thread, usize,
+};
 
 #[cfg(feature = "discord_base")]
 mod discord;
@@ -10,13 +14,11 @@ mod bluetooth;
 #[cfg(feature = "bluetooth")]
 use bluetooth::{detector::BluetoothDetector, device::BluetoothDevice};
 
-use doorman::{manager::Manager, registry::Registry};
-use doorman::interfaces::services::Registry as RegistryTrait;
-use log::{LevelFilter, info, warn};
-use simple::{actuator, authenticator, device::SimpleDevice};
 use clap::Clap;
-
-
+use doorman::interfaces::services::Registry as RegistryTrait;
+use doorman::{manager::Manager, registry::Registry};
+use log::{info, warn, LevelFilter};
+use simple::{actuator, authenticator, device::SimpleDevice};
 
 mod simple;
 
@@ -26,11 +28,9 @@ type DiscordArgs = discord::cli::Args;
 #[cfg(not(feature = "discord_base"))]
 struct DiscordArgs;
 
-
 #[derive(Clap, Debug, Clone)]
 #[clap()]
 struct Args {
-
     #[clap(flatten)]
     discord_args: DiscordArgs,
 
@@ -52,17 +52,16 @@ async fn main() -> anyhow::Result<()> {
 
     let args = Args::parse();
 
-
     env_logger::Builder::from_default_env()
-    .filter_level(match args.verbosity {
-        0 => LevelFilter::Error,
-        1 => LevelFilter::Warn,
-        2 => LevelFilter::Info,
-        3 => LevelFilter::Debug,
-        _ => LevelFilter::Trace,
-    })
-    // .filter_module("doorman", log::LevelFilter::Debug)
-    .init();
+        .filter_level(match args.verbosity {
+            0 => LevelFilter::Error,
+            1 => LevelFilter::Warn,
+            2 => LevelFilter::Info,
+            3 => LevelFilter::Debug,
+            _ => LevelFilter::Trace,
+        })
+        // .filter_module("doorman", log::LevelFilter::Debug)
+        .init();
 
     let mut registry = Registry::new();
 
@@ -77,7 +76,6 @@ async fn main() -> anyhow::Result<()> {
             let detector = simple::detector::Detector::new(&registry);
         }
     }
-
 
     cfg_if::cfg_if! {
         if #[cfg(feature="discord_base")] {
@@ -97,6 +95,4 @@ async fn main() -> anyhow::Result<()> {
     manager.run().await?;
 
     Ok(())
-
-
 }

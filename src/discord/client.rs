@@ -1,16 +1,14 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use futures::lock::Mutex;
 use log::{debug, error, info};
 use serenity::{
-    client::{
-        Context, EventHandler,
-    },
+    client::{Context, EventHandler},
     framework::StandardFramework,
     model::prelude::Ready,
     Client as SerenityClient,
 };
-use futures::lock::Mutex;
 use thiserror::Error;
 use tokio::{
     sync::mpsc::{self, Receiver},
@@ -93,5 +91,4 @@ impl Client<Uninitialized> {
     }
 }
 
-impl Client<Initialized> {
-}
+impl Client<Initialized> {}

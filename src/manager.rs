@@ -39,10 +39,18 @@ where
     Auth: Authenticate<Device = Device>,
     Act: Actuator,
 {
-    pub fn new(detector: &'a Detect, auth: &'a Auth, act: &'a mut Act) -> Self { Self { detector, auth, act } }
+    pub fn new(detector: &'a Detect, auth: &'a Auth, act: &'a mut Act) -> Self {
+        Self {
+            detector,
+            auth,
+            act,
+        }
+    }
 
-    pub async fn run(&mut self) -> Result<(), ManagerError<Detect::DetectorError, Auth::AuthenticateError, Act::ActuatorError>> {
-
+    pub async fn run(
+        &mut self,
+    ) -> Result<(), ManagerError<Detect::DetectorError, Auth::AuthenticateError, Act::ActuatorError>>
+    {
         info!("Waiting for device...");
 
         let device = self
@@ -53,14 +61,17 @@ where
 
         info!("Device detected attempting authentication...");
 
-        let authentication = self.auth
+        let authentication = self
+            .auth
             .authenticate(&device, None)
             .await
             .map_err(ManagerError::Authenticate)?;
 
         match authentication {
-            interfaces::services::AuthenticateResult::Allow => self.act.open().map_err(ManagerError::Actuate)?,
-            _ => info!("Access with device {:?} denied", device)
+            interfaces::services::AuthenticateResult::Allow => {
+                self.act.open().map_err(ManagerError::Actuate)?
+            }
+            _ => info!("Access with device {:?} denied", device),
         };
         Ok(())
     }

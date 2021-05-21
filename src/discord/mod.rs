@@ -1,3 +1,3 @@
 pub mod authenticator;
-pub mod client;
 pub mod cli;
+pub mod client;

@@ -1,12 +1,12 @@
 use super::device::SimpleDevice;
+use async_trait::async_trait;
 use doorman::interfaces::services::{self, Registry, ServiceError};
 use std::io::{self, BufRead};
 use thiserror::Error;
-use async_trait::async_trait;
 #[derive(Debug, Error)]
 pub enum DetectorError {
     #[error("EOL without device found")]
-    EOLError
+    EOLError,
 }
 
 impl ServiceError for DetectorError {}
@@ -16,11 +16,15 @@ pub struct Detector<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> {
 }
 
 impl<'a, Reg: Registry<Device = SimpleDevice> + Send + Sync> Detector<'a, Reg> {
-    pub fn new(registry: &'a Reg) -> Self { Self { registry } }
+    pub fn new(registry: &'a Reg) -> Self {
+        Self { registry }
+    }
 }
 
 #[async_trait]
-impl<'a, Reg: Registry<Device = SimpleDevice, Ident=SimpleDevice> + Send + Sync> services::Detector for Detector<'a, Reg> {
+impl<'a, Reg: Registry<Device = SimpleDevice, Ident = SimpleDevice> + Send + Sync>
+    services::Detector for Detector<'a, Reg>
+{
     type Device = SimpleDevice;
     type DetectorError = DetectorError;
 
@@ -32,7 +36,6 @@ impl<'a, Reg: Registry<Device = SimpleDevice, Ident=SimpleDevice> + Send + Sync>
             if let Some(device) = self.registry.check(&device) {
                 return Ok(device);
             };
-
         }
         Err(DetectorError::EOLError)
     }

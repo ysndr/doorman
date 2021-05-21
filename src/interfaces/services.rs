@@ -19,14 +19,20 @@ pub trait Registry {
     type RegistryError: ServiceError;
 
     /// Register a new device
-    fn register_device_with(&mut self, ident: Self::Ident, device: Self::Device) -> Result<(), Self::RegistryError>;
+    fn register_device_with(
+        &mut self,
+        ident: Self::Ident,
+        device: Self::Device,
+    ) -> Result<(), Self::RegistryError>;
 
     /// Register a new device deriving the identifier from the divice
     /// Prefer using this method of there are no naming conflicts
-    fn register_device<D: Into<Self::Ident> + Into<Self::Device> + Clone>(&mut self, device: D) -> Result<(), Self::RegistryError> {
+    fn register_device<D: Into<Self::Ident> + Into<Self::Device> + Clone>(
+        &mut self,
+        device: D,
+    ) -> Result<(), Self::RegistryError> {
         self.register_device_with(device.clone().into(), device.into())
     }
-
 
     /// Unregisters an existing device with a given ident
     /// Returns an error if the device is unknown
@@ -37,11 +43,10 @@ pub trait Registry {
     fn check(&self, ident: &Self::Ident) -> Option<&Self::Device>;
 }
 
-
 #[derive(Debug)]
 pub enum AuthenticateResult {
     Allow,
-    Deny
+    Deny,
 }
 
 #[async_trait]
@@ -50,9 +55,12 @@ pub trait Authenticate {
     type AuthenticateError: ServiceError;
 
     /// request an authentiation
-    async fn authenticate(&self, device: &Self::Device, timeout: Option<usize>) -> Result<AuthenticateResult, Self::AuthenticateError>;
+    async fn authenticate(
+        &self,
+        device: &Self::Device,
+        timeout: Option<usize>,
+    ) -> Result<AuthenticateResult, Self::AuthenticateError>;
 }
-
 
 pub trait Actuator {
     type ActuatorError: ServiceError;
