@@ -7,15 +7,36 @@
     system:
       let
         pkgs = import nixpkgs { inherit system; };
-        doorman = (import ./Cargo.nix { inherit pkgs; rootFeatures = []; }).rootCrate.build;
-        doorman-discord = (import ./Cargo.nix { inherit pkgs; rootFeatures = ["discord"]; }).rootCrate.build;
-        doorman-discord-bt = (import ./Cargo.nix { inherit pkgs; rootFeatures = ["discord" "bluetooth"]; }).rootCrate.build;
-        doorman-bt = import ./Cargo.nix { inherit pkgs; rootFeatures = ["bluetooth"]; };
 
+        customBuildRustCrateForPkgs = pkgs: pkgs.buildRustCrate.override {
+          defaultCrateOverrides = pkgs.defaultCrateOverrides // {
+            hyper = attrs: {
+              buildInputs =
+                pkgs.lib.optionals
+                  pkgs.stdenv.isDarwin
+                  [ pkgs.darwin.apple_sdk.frameworks.Security pkgs.libiconv ];
+            };
+            doorman = attrs: {
+              buildInputs =
+                pkgs.lib.optionals
+                  pkgs.stdenv.isDarwin
+                  [ pkgs.darwin.apple_sdk.frameworks.Security pkgs.libiconv ];
+            };
+          };
+        };
+        base = (
+          import ./Cargo.nix {
+            inherit pkgs;
+            buildRustCrateForPkgs = customBuildRustCrateForPkgs;
+          }
+        );
 
+        doorman = base.rootCrate.build;
+        doorman-discord = doorman.override { features = [ "discord" ]; };
+        doorman-discord-bt = doorman.override { features = [ "discord" "bluetooth" ]; };
       in
         rec {
-          packages = { inherit doorman doorman-discord-bt; };
+          packages = { inherit doorman doorman-discord-bt doorman-discord; };
           defaultPackage = doorman;
           defaultApp = apps.doorman-discord-bt;
           apps = {
