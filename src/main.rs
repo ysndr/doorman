@@ -16,7 +16,7 @@ use doorman::{manager::Manager, registry::Registry};
 use log::{debug, LevelFilter};
 use simple::{actuator, authenticator, device::SimpleDevice};
 
-use crate::simple::detector::Detector;
+use crate::simple::{detector::Detector, locker::Locker};
 
 mod simple;
 
@@ -26,11 +26,20 @@ type DiscordArgs = discord::cli::Args;
 #[cfg(not(feature = "discord_base"))]
 struct DiscordArgs;
 
+#[cfg(feature = "bluetooth")]
+type BluetoothArgs = bluetooth::cli::Args;
+#[derive(Clap, Debug, Clone)]
+#[cfg(not(feature = "bluetooth"))]
+struct BluetoothArgs;
+
 #[derive(Clap, Debug, Clone)]
 #[clap()]
 struct Args {
     #[clap(flatten)]
     discord_args: DiscordArgs,
+
+    #[clap(flatten)]
+    bluetooth_args: BluetoothArgs,
 
     /** How much logging to enable (
         -v: warn,
@@ -83,17 +92,20 @@ async fn main() -> anyhow::Result<()> {
             let client = client::Client::new(args.discord_args.token, args.discord_args.user).await;
             let client = client.run().await?;
             let auth = DiscordAuth::new(&client);
+            let locker = DiscordLocker::new(&client);
         }
         else {
             let auth = authenticator::Authenticator::new();
+            let locker = Locker::new();
         }
     }
 
     let mut act = actuator::Actuator;
 
-    let mut manager = Manager::new(&detector, &auth, &mut act);
 
-    manager.run().await?;
+    let mut manager = Manager::new(&detector, &auth, &mut act, &locker);
+
+    manager.daemon().await?;
 
     Ok(())
 }

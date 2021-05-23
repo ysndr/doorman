@@ -1,8 +1,5 @@
-use crate::interfaces::{
-    self,
-    services::{Actuator, Authenticate, Detector, ServiceError},
-};
-use log::{info};
+use crate::interfaces::{self, services::{Actuator, Authenticate, AuthenticateResult, Detector, Locker, ServiceError}};
+use log::{debug, info};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -10,6 +7,7 @@ pub enum ManagerError<
     DetectError: ServiceError,
     AuthenticateError: ServiceError,
     ActError: ServiceError,
+    LockError: ServiceError,
 > {
     #[error("Something happened")]
     General,
@@ -19,37 +17,37 @@ pub enum ManagerError<
     Authenticate(AuthenticateError),
     #[error("Actuator experienced an Error: {0}")]
     Actuate(ActError),
+    #[error("Locker experienced an Error: {0}")]
+    Lock(LockError),
 }
 
-pub struct Manager<'a, Detect, Auth, Act, Device>
+pub struct Manager<'a, Detect, Auth, Act, Lock>
 where
-    Detect: Detector<Device = Device>,
-    Auth: Authenticate<Device = Device>,
+    Detect: Detector,
+    Auth: Authenticate<Device = Detect::Device>,
     Act: Actuator,
+    Lock: Locker,
 {
+    locker: &'a Lock,
     detector: &'a Detect,
     auth: &'a Auth,
     act: &'a mut Act,
 }
 
-impl<'a, Detect, Auth, Act, Device> Manager<'a, Detect, Auth, Act, Device>
+impl<'a, Detect, Auth, Act, Lock> Manager<'a, Detect, Auth, Act, Lock>
 where
-    Device: std::fmt::Debug,
-    Detect: Detector<Device = Device>,
-    Auth: Authenticate<Device = Device>,
+    Detect: Detector,
+    Auth: Authenticate<Device = Detect::Device>,
     Act: Actuator,
+    Lock: Locker,
 {
-    pub fn new(detector: &'a Detect, auth: &'a Auth, act: &'a mut Act) -> Self {
-        Self {
-            detector,
-            auth,
-            act,
-        }
+    pub fn new(detector: &'a Detect, auth: &'a Auth, act: &'a mut Act, locker: &'a Lock) -> Self {
+        Self { locker, detector, auth, act }
     }
 
     pub async fn run(
         &mut self,
-    ) -> Result<(), ManagerError<Detect::DetectorError, Auth::AuthenticateError, Act::ActuatorError>>
+    ) -> Result<AuthenticateResult, ManagerError<Detect::DetectorError, Auth::AuthenticateError, Act::ActuatorError, Lock::LockerError>>
     {
         info!("Waiting for device...");
 
@@ -73,6 +71,22 @@ where
             }
             _ => info!("Access with device {:?} denied", device),
         };
-        Ok(())
+        Ok(authentication)
     }
+
+    pub async fn daemon(
+        &mut self,
+    ) -> Result<(), ManagerError<Detect::DetectorError, Auth::AuthenticateError, Act::ActuatorError, Lock::LockerError>>
+    {
+        loop {
+            self.locker.wait_for_lock().await.map_err(ManagerError::Lock)?;
+
+
+            self.run().await? ;
+
+
+        }
+    }
+
+
 }

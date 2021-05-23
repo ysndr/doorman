@@ -109,3 +109,11 @@ pub trait Actuator {
     /// Actuate the opening mechanism
     fn open(&mut self) -> Result<(), Self::ActuatorError>;
 }
+
+#[async_trait]
+pub trait Locker {
+    type LockerError: ServiceError;
+
+    /// Await engagement of the mechanism
+    async fn wait_for_lock(&self) -> Result<(), Self::LockerError>;
+}
