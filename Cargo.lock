@@ -411,6 +411,8 @@ dependencies = [
  "env_logger",
  "futures",
  "log",
+ "serde",
+ "serde_json",
  "serenity",
  "thiserror",
  "tokio",

@@ -1,8 +1,9 @@
 use derive_more::{Constructor, Display};
+use serde::{Deserialize, Serialize};
 
 pub type Address = String;
 
-#[derive(Debug, Clone, Constructor, Display)]
+#[derive(Debug, Clone, Constructor, Display, Serialize, Deserialize)]
 #[display(fmt = "{}/{} ({})", name, address, rssi_reference)]
 pub struct BluetoothDevice {
     name: String,
@@ -12,6 +13,6 @@ pub struct BluetoothDevice {
 
 impl Into<Address> for BluetoothDevice {
     fn into(self) -> Address {
-        self.address.clone()
+        self.address
     }
 }
