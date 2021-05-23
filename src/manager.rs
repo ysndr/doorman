@@ -1,6 +1,12 @@
-use crate::interfaces::{self, services::{Actuator, Authenticate, AuthenticateResult, Detector, Locker, ServiceError}};
+use std::time::Duration;
+
+use crate::interfaces::{
+    self,
+    services::{Actuator, Authenticate, AuthenticateResult, Detector, Locker, ServiceError},
+};
 use log::{debug, info};
 use thiserror::Error;
+use tokio::time::sleep;
 
 #[derive(Error, Debug)]
 pub enum ManagerError<
@@ -42,13 +48,25 @@ where
     Lock: Locker,
 {
     pub fn new(detector: &'a Detect, auth: &'a Auth, act: &'a mut Act, locker: &'a Lock) -> Self {
-        Self { locker, detector, auth, act }
+        Self {
+            locker,
+            detector,
+            auth,
+            act,
+        }
     }
 
     pub async fn run(
         &mut self,
-    ) -> Result<AuthenticateResult, ManagerError<Detect::DetectorError, Auth::AuthenticateError, Act::ActuatorError, Lock::LockerError>>
-    {
+    ) -> Result<
+        AuthenticateResult,
+        ManagerError<
+            Detect::DetectorError,
+            Auth::AuthenticateError,
+            Act::ActuatorError,
+            Lock::LockerError,
+        >,
+    > {
         info!("Waiting for device...");
 
         let device = self
@@ -76,18 +94,29 @@ where
 
     pub async fn daemon(
         &mut self,
-    ) -> Result<(), ManagerError<Detect::DetectorError, Auth::AuthenticateError, Act::ActuatorError, Lock::LockerError>>
-    {
+    ) -> Result<
+        (),
+        ManagerError<
+            Detect::DetectorError,
+            Auth::AuthenticateError,
+            Act::ActuatorError,
+            Lock::LockerError,
+        >,
+    > {
         loop {
-            self.locker.wait_for_lock().await.map_err(ManagerError::Lock)?;
+            self.locker
+                .wait_for_lock()
+                .await
+                .map_err(ManagerError::Lock)?;
 
-            self.locker.confirm_lock().await.map_err(ManagerError::Lock)?;
+            self.locker
+                .confirm_lock()
+                .await
+                .map_err(ManagerError::Lock)?;
 
-            self.run().await? ;
-
-
+            while let AuthenticateResult::Deny = self.run().await? {
+                sleep(Duration::from_secs(30)).await;
+            }
         }
     }
-
-
 }
