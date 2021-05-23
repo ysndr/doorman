@@ -81,6 +81,7 @@ where
         loop {
             self.locker.wait_for_lock().await.map_err(ManagerError::Lock)?;
 
+            self.locker.confirm_lock().await.map_err(ManagerError::Lock)?;
 
             self.run().await? ;
 

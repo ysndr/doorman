@@ -116,4 +116,7 @@ pub trait Locker {
 
     /// Await engagement of the mechanism
     async fn wait_for_lock(&self) -> Result<(), Self::LockerError>;
+
+    /// Confirm lock to the user
+    async fn confirm_lock(&self) -> Result<(), Self::LockerError>;
 }

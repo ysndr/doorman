@@ -34,5 +34,12 @@ impl services::Locker for Locker {
         Ok(())
     }
 
+    async fn confirm_lock(&self) -> Result<(), Self::LockerError> {
+        println!("locked!");
+        Ok(())
+    }
+
+
+
 
 }

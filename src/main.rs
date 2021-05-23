@@ -16,7 +16,7 @@ use doorman::{manager::Manager, registry::Registry};
 use log::{debug, LevelFilter};
 use simple::{actuator, authenticator, device::SimpleDevice};
 
-use crate::simple::{detector::Detector, locker::Locker};
+use crate::{discord::locker::DiscordLocker, simple::{detector::Detector, locker::Locker}};
 
 mod simple;
 
