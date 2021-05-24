@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use doorman::interfaces::services::{self, AuthenticateResult, ServiceError};
 use serenity::Error as SerenityError;
+use core::time;
 use std::{fmt::Display, marker::PhantomData, time::Duration};
 use thiserror::Error;
 
@@ -35,7 +36,7 @@ impl<D: Send + Sync + Display> services::Authenticate for DiscordAuth<'_, D> {
     async fn authenticate(
         &self,
         device: &Self::Device,
-        timeout: Option<usize>,
+        timeout: Option<Duration>,
     ) -> Result<services::AuthenticateResult, Self::AuthenticateError> {
         let ctx = self.client.state.ctx.clone();
         let message = self
@@ -52,7 +53,7 @@ impl<D: Send + Sync + Display> services::Authenticate for DiscordAuth<'_, D> {
 
         let mut collect_reaction = message.await_reaction(&*ctx);
         if let Some(timeout) = timeout {
-            collect_reaction = collect_reaction.timeout(Duration::from_secs(timeout as u64));
+            collect_reaction = collect_reaction.timeout(timeout);
         }
 
         if let Some(reaction) = collect_reaction.await {

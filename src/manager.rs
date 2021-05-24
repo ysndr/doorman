@@ -27,6 +27,11 @@ pub enum ManagerError<
     Lock(LockError),
 }
 
+pub struct Config {
+    pub authorize_timeout: Option<Duration>,
+    pub reauthorize_timeout: Duration,
+}
+
 pub struct Manager<'a, Detect, Auth, Act, Lock>
 where
     Detect: Detector,
@@ -38,6 +43,7 @@ where
     detector: &'a Detect,
     auth: &'a Auth,
     act: &'a mut Act,
+    config: Config,
 }
 
 impl<'a, Detect, Auth, Act, Lock> Manager<'a, Detect, Auth, Act, Lock>
@@ -47,12 +53,13 @@ where
     Act: Actuator,
     Lock: Locker,
 {
-    pub fn new(detector: &'a Detect, auth: &'a Auth, act: &'a mut Act, locker: &'a Lock) -> Self {
+    pub fn new(detector: &'a Detect, auth: &'a Auth, act: &'a mut Act, locker: &'a Lock, config: Config) -> Self {
         Self {
             locker,
             detector,
             auth,
             act,
+            config,
         }
     }
 
@@ -79,7 +86,7 @@ where
 
         let authentication = self
             .auth
-            .authenticate(&device, None)
+            .authenticate(&device, self.config.authorize_timeout)
             .await
             .map_err(ManagerError::Authenticate)?;
 
@@ -115,7 +122,7 @@ where
                 .map_err(ManagerError::Lock)?;
 
             while let AuthenticateResult::Deny = self.run().await? {
-                sleep(Duration::from_secs(30)).await;
+                sleep(self.config.reauthorize_timeout).await;
             }
         }
     }

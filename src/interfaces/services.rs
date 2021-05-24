@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, fmt::Debug};
+use std::{collections::HashMap, error::Error, fmt::Debug, time::Duration};
 
 use async_trait::async_trait;
 
@@ -99,7 +99,7 @@ pub trait Authenticate {
     async fn authenticate(
         &self,
         device: &Self::Device,
-        timeout: Option<usize>,
+        timeout: Option<Duration>,
     ) -> Result<AuthenticateResult, Self::AuthenticateError>;
 }
 
