@@ -21,6 +21,8 @@ use crate::{
     simple::{detector::Detector, locker::Locker},
 };
 
+mod rpi_servo;
+
 mod simple;
 
 #[cfg(feature = "discord_base")]
