@@ -1,7 +1,7 @@
-
-
 #[cfg(feature = "discord_base")]
 mod discord;
+use std::path::PathBuf;
+
 #[cfg(feature = "discord_base")]
 use discord::{authenticator::DiscordAuth, client};
 
@@ -13,8 +13,10 @@ use bluetooth::{detector::BluetoothDetector, device::BluetoothDevice};
 use clap::Clap;
 use doorman::interfaces::services::Registry as RegistryTrait;
 use doorman::{manager::Manager, registry::Registry};
-use log::{LevelFilter};
+use log::{debug, LevelFilter};
 use simple::{actuator, authenticator, device::SimpleDevice};
+
+use crate::simple::detector::Detector;
 
 mod simple;
 
@@ -40,6 +42,10 @@ struct Args {
     */
     #[clap(short, parse(from_occurrences))]
     verbosity: u8,
+
+    /// Devices that are allowed authorize
+    #[clap(short, long)]
+    devices: PathBuf,
 }
 
 #[tokio::main]
@@ -60,16 +66,15 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let mut registry = Registry::new();
+    registry.from_file(args.devices)?;
+
+    debug!("Registered Devices: {:?}", registry.list());
 
     cfg_if::cfg_if! {
         if #[cfg(feature="bluetooth")] {
-            registry.register_device(BluetoothDevice::new("Gamal Samsung".to_string(), "c0:bd:c8:80:01:9e".to_string(), 0 ))?;
-            registry.register_device(BluetoothDevice::new("OnePlus 5".to_string(), "94:65:2d:7d:25:67".to_string(), 0 ))?;
             let detector = BluetoothDetector::new(&registry).await?;
         } else {
-            registry.register_device(SimpleDevice("Yannik's MacBook Pro".to_string()))?;
-            registry.register_device(SimpleDevice("Yannik's MacBook Pro".to_string()))?;
-            let detector = simple::detector::Detector::new(&registry);
+            let detector= simple::detector::Detector::new(&registry);
         }
     }
 
