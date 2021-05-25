@@ -2,11 +2,7 @@ use async_trait::async_trait;
 
 use doorman::interfaces::services::{self, ServiceError};
 use log::info;
-use std::{
-    fmt::Display,
-    io::{self, BufRead},
-    marker::PhantomData,
-};
+use std::{fmt::Display, io::{self, BufRead}, marker::PhantomData, time::Duration};
 use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum AuthenticatorError {
@@ -37,7 +33,7 @@ impl<D: Display + std::marker::Sync> services::Authenticate for Authenticator<D>
     async fn authenticate(
         &self,
         device: &Self::Device,
-        _: Option<usize>,
+        _: Option<Duration>,
     ) -> Result<services::AuthenticateResult, Self::AuthenticateError> {
         let stdin = io::stdin();
         println!("Device {} device detected.\n open (y)es, (N)o", device);

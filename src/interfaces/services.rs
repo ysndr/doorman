@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error, fmt::Debug};
+use std::{collections::HashMap, error::Error, fmt::Debug, time::Duration};
 
 use async_trait::async_trait;
 
@@ -99,7 +99,7 @@ pub trait Authenticate {
     async fn authenticate(
         &self,
         device: &Self::Device,
-        timeout: Option<usize>,
+        timeout: Option<Duration>,
     ) -> Result<AuthenticateResult, Self::AuthenticateError>;
 }
 
@@ -108,4 +108,15 @@ pub trait Actuator {
 
     /// Actuate the opening mechanism
     fn open(&mut self) -> Result<(), Self::ActuatorError>;
+}
+
+#[async_trait]
+pub trait Locker {
+    type LockerError: ServiceError;
+
+    /// Await engagement of the mechanism
+    async fn wait_for_lock(&self) -> Result<(), Self::LockerError>;
+
+    /// Confirm lock to the user
+    async fn confirm_lock(&self) -> Result<(), Self::LockerError>;
 }

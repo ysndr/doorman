@@ -1195,6 +1195,15 @@ rec {
             packageId = "log";
           }
           {
+            name = "serde";
+            packageId = "serde";
+            features = [ "derive" ];
+          }
+          {
+            name = "serde_json";
+            packageId = "serde_json";
+          }
+          {
             name = "serenity";
             packageId = "serenity";
             optional = true;
@@ -1207,7 +1216,7 @@ rec {
           {
             name = "tokio";
             packageId = "tokio";
-            features = [ "rt-multi-thread" "macros" "time" ];
+            features = [ "rt-multi-thread" "macros" "time" "io-util" "fs" ];
           }
         ];
         features = {
