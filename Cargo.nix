@@ -1195,6 +1195,11 @@ rec {
             packageId = "log";
           }
           {
+            name = "rppal";
+            packageId = "rppal";
+            features = [ "hal" ];
+          }
+          {
             name = "serde";
             packageId = "serde";
             features = [ "derive" ];
@@ -1244,6 +1249,30 @@ rec {
         ];
         features = {
           "cli" = [ "clap" ];
+        };
+      };
+      "embedded-hal" = rec {
+        crateName = "embedded-hal";
+        version = "0.2.5";
+        edition = "2015";
+        sha256 = "1bbjs66lp5nb3n002i0sr05zwk8lch14qfah88sa5ivvl8zls66v";
+        authors = [
+          "Jorge Aparicio <jorge@japaric.io>"
+          "Jonathan 'theJPster' Pallant <github@thejpster.org.uk>"
+        ];
+        dependencies = [
+          {
+            name = "nb";
+            packageId = "nb 0.1.3";
+          }
+          {
+            name = "void";
+            packageId = "void";
+            usesDefaultFeatures = false;
+          }
+        ];
+        features = {
+          "unproven" = [ "nb/unstable" ];
         };
       };
       "encoding_rs" = rec {
@@ -2599,6 +2628,33 @@ rec {
         ];
 
       };
+      "nb 0.1.3" = rec {
+        crateName = "nb";
+        version = "0.1.3";
+        edition = "2015";
+        sha256 = "0vyh31pbwrg21f8hz1ipb9i20qwnfwx47gz92i9frdhk0pd327c0";
+        authors = [
+          "Jorge Aparicio <jorge@japaric.io>"
+        ];
+        dependencies = [
+          {
+            name = "nb";
+            packageId = "nb 1.0.0";
+          }
+        ];
+        features = {
+        };
+      };
+      "nb 1.0.0" = rec {
+        crateName = "nb";
+        version = "1.0.0";
+        edition = "2018";
+        sha256 = "1blc9143cqh3cn2imr050qczbnfrfdl10xxnfdggamlybnn3fv2l";
+        authors = [
+          "Jorge Aparicio <jorge@japaric.io>"
+        ];
+
+      };
       "ntapi" = rec {
         crateName = "ntapi";
         version = "0.3.6";
@@ -3492,6 +3548,45 @@ rec {
           "std" = [ "alloc" ];
         };
         resolvedDefaultFeatures = [ "alloc" "default" "dev_urandom_fallback" "once_cell" ];
+      };
+      "rppal" = rec {
+        crateName = "rppal";
+        version = "0.12.0";
+        edition = "2018";
+        sha256 = "070j4312kx2fh3hh8wmk6s73hx8z4pj6kxdfyjr3fj0vi267a9pb";
+        authors = [
+          "Rene van der Meer <rene@golemparts.com>"
+        ];
+        dependencies = [
+          {
+            name = "embedded-hal";
+            packageId = "embedded-hal";
+            optional = true;
+          }
+          {
+            name = "lazy_static";
+            packageId = "lazy_static";
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+          }
+          {
+            name = "nb";
+            packageId = "nb 0.1.3";
+            optional = true;
+          }
+          {
+            name = "void";
+            packageId = "void";
+            optional = true;
+          }
+        ];
+        features = {
+          "hal" = [ "nb" "void" "embedded-hal" ];
+          "hal-unproven" = [ "nb" "embedded-hal/unproven" "hal" ];
+        };
+        resolvedDefaultFeatures = [ "default" "embedded-hal" "hal" "nb" "void" ];
       };
       "rustls" = rec {
         crateName = "rustls";
@@ -4812,6 +4907,19 @@ rec {
           "Sergio Benitez <sb@sergio.bz>"
         ];
 
+      };
+      "void" = rec {
+        crateName = "void";
+        version = "1.0.2";
+        edition = "2015";
+        sha256 = "0zc8f0ksxvmhvgx4fdg0zyn6vdnbxd2xv9hfx4nhzg6kbs4f80ka";
+        authors = [
+          "Jonathan Reem <jonathan.reem@gmail.com>"
+        ];
+        features = {
+          "default" = [ "std" ];
+        };
+        resolvedDefaultFeatures = [ "default" "std" ];
       };
       "waker-fn" = rec {
         crateName = "waker-fn";

@@ -3,7 +3,7 @@ mod discord;
 use std::{path::PathBuf, time::Duration};
 
 #[cfg(feature = "discord_base")]
-use discord::{authenticator::DiscordAuth, client};
+use discord::{authenticator::DiscordAuth, client, locker::DiscordLocker};
 
 #[cfg(feature = "bluetooth")]
 mod bluetooth;
@@ -17,9 +17,10 @@ use log::{debug, LevelFilter};
 use simple::{actuator, authenticator, device::SimpleDevice};
 
 use crate::{
-    discord::locker::DiscordLocker,
     simple::{detector::Detector, locker::Locker},
 };
+
+mod rpi_servo;
 
 mod simple;
 
@@ -117,7 +118,7 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    let mut act = actuator::Actuator;
+    let mut act = rpi_servo::actuator::Actuator::new()?;
 
     let config = manager::Config {
         authorize_timeout: args.manager_config.timeout.map(Duration::from_secs),
